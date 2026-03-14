@@ -1,39 +1,45 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useTaskStore } from '@/stores/task';
-import AuthLayout from '@/layouts/AuthLayout.vue';
+import { computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useTaskStore } from '@/stores/task'
+import { useAuthStore } from '@/stores/auth'
+import AuthLayout from '@/layouts/AuthLayout.vue'
+import BaseLayout from '@/layouts/BaseLayout.vue'
 
 defineOptions({
   name: 'App'
 })
 
+const route = useRoute()
 const taskStore = useTaskStore()
-const name = ref<string>('')
+const authStore = useAuthStore()
 
-const createTask = async () => {
-  if (name.value === '') return
+const layoutMap = {
+  base: BaseLayout,
+  auth: AuthLayout
+} as const
 
-  await taskStore.createTask({
-    id: String(Math.random()),
-    name: name.value,
-    logs: []
-  })
+type LayoutKey = keyof typeof layoutMap
 
-  name.value = ''
-}
+const viewLayout = computed(() => {
+  const layout = route.meta.layout
+
+  if (typeof layout === 'string' && layout in layoutMap) {
+    return layoutMap[layout as LayoutKey]
+  }
+
+  return BaseLayout
+})
+
+onMounted(async () => {
+  if (authStore.isAuth) {
+    await taskStore.loadTasks()
+  }
+})
 </script>
 
 <template>
-  <form @submit.prevent="createTask">
-    <input type="text" name="name" v-model="name">
-    <button type="submit">Create</button>
-  </form>
-  <div v-for="task in taskStore.tasks" :key="task.id">
-    <h3>{{ task.name }}</h3>
-    <p>{{ task.id }}</p>
-    <button @click="taskStore.deleteTask(task.id)">Delete Task</button>
-  </div>
-  <AuthLayout />
+  <component :is="viewLayout" />
 </template>
 
 <style scoped></style>

@@ -3,8 +3,6 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  updateEmail,
-  updatePassword,
   type User,
 } from 'firebase/auth'
 
@@ -19,5 +17,5 @@ export const authService = {
   },
   async logout(): Promise<void> {
     await signOut(auth)
-  }
+  },
 }

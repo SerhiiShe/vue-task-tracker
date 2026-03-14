@@ -37,22 +37,5 @@
     "skipLibCheck": false
   },
 
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.vue",
-    "env.d.ts"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "env.d.ts"]
 }
-
-// {
-//   "files": [],
-//   "references": [
-//     {
-//       "path": "./tsconfig.node.json"
-//     },
-//     {
-//       "path": "./tsconfig.app.json"
-//     }
-//   ]
-// }

@@ -5,6 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/services/firebase/config'
 import router from '@/router'
 import { AuthUser } from '@/types'
+import { useTaskStore } from './task'
 
 export const useAuthStore = defineStore('auth', () => {
   // state
@@ -18,8 +19,11 @@ export const useAuthStore = defineStore('auth', () => {
   // actions
   async function signUp(email: string, password: string): Promise<void> {
     try {
+      const taskStore = useTaskStore()
+
       const newUser = await authService.register(email, password)
       user.value = newUser
+      await taskStore.loadTasks()
       router.push('/')
     } catch (e: unknown) {
       console.error('signUp failed', e)
@@ -29,8 +33,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(email: string, password: string): Promise<void> {
     try {
+      const taskStore = useTaskStore()
+
       const newUser = await authService.signIn(email, password)
       user.value = newUser
+      await taskStore.loadTasks()
       router.push('/')
     } catch (e: unknown) {
       console.error('login failed', e)
@@ -40,17 +47,24 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout(): Promise<void> {
     try {
-      await authService.logout()
+      const taskStore = useTaskStore()
+
       user.value = null
+      taskStore.clearStoreData()
+      await authService.logout()
+      router.push('/login')
     } catch (e: unknown) {
       console.error('logout failed', e)
       throw e
     }
   }
 
-  function init(): void {
-    onAuthStateChanged(auth, (u) => {
-      user.value = u
+  function init(): Promise<void> {
+    return new Promise((resolve) => {
+      onAuthStateChanged(auth, (u) => {
+        user.value = u
+        resolve()
+      })
     })
   }
 

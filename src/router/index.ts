@@ -1,13 +1,14 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'TaskList',
-    component: () => import('@/App.vue'),
+    component: () => import('@/views/task/TaskListView.vue'),
     meta: {
       layout: 'base',
-      auth: true,
+      access: 'authOnly',
     },
   },
   {
@@ -16,7 +17,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/LoginView.vue'),
     meta: {
       layout: 'auth',
-      auth: false,
+      access: 'guestsOnly',
     },
   },
   {
@@ -25,7 +26,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/SignUpView.vue'),
     meta: {
       layout: 'auth',
-      auth: false,
+      access: 'guestsOnly',
     },
   },
 ]
@@ -33,6 +34,20 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHashHistory(), // GitHub Pages
   routes,
+})
+
+router.beforeEach((to) => {
+  const authStore = useAuthStore()
+
+  if (to.meta.access === 'guestsOnly' && authStore.isAuth) {
+    return { name: 'TaskList' }
+  }
+
+  if (to.meta.access === 'authOnly' && !authStore.isAuth) {
+    return { name: 'Login' }
+  }
+
+  return true
 })
 
 export default router
