@@ -4,6 +4,7 @@ import { Task, TASK_STATUS, TaskStatus } from '@/types'
 import { useTaskStore } from '@/stores/task'
 import { formatTimeObject } from '@/utils/formatTimeObject'
 import { formatTimeString } from '@/utils/formatTimeString'
+import { convertTimeToMs } from '@/utils/convertTimeToMs'
 import TimerLog from '@/components/log/TimerLog.vue'
 import BaseButton from '../ui/BaseButton.vue'
 
@@ -25,7 +26,7 @@ const isLogsPanelOpen = ref<boolean>(false)
 const totalTime = computed(() => {
   if (props.task.logs) {
     const totalMs = props.task.logs.reduce(
-      (acc, log) => acc + log.timestampTime,
+      (acc, log) => acc + convertTimeToMs(log.time),
       0
     )
 
@@ -82,11 +83,11 @@ function handleChange(e: Event) {
     <!-- main actions -->
     <div class="flex flex-wrap gap-2">
 
-      <BaseButton @action="taskStore.startTimer(task.id)">
+      <BaseButton v-if="taskStore.currentTimer?.taskId !== task.id" @action="taskStore.startTimer(task.id)">
         Start
       </BaseButton>
 
-      <BaseButton @action="taskStore.stopTimer()">
+      <BaseButton v-if="taskStore.currentTimer?.taskId === task.id" @action="taskStore.stopTimer()">
         Stop
       </BaseButton>
 
@@ -121,9 +122,10 @@ function handleChange(e: Event) {
 
     <!-- logs -->
     <div v-if="isLogsPanelOpen" class="space-y-2 pt-2 border-t border-gray-100">
-      <TimerLog v-for="log in task.logs" :key="log.id" :log="log"
+      <TimerLog v-if="task.logs?.length" v-for="log in task.logs" :key="log.id" :log="log"
         @delete-log="(logId) => taskStore.deleteLog(task.id, logId)"
         @edit-log="(logId, editedTime) => taskStore.editLog(task.id, logId, editedTime)" />
+      <p v-else>You haven't worked on this task yet.</p>
     </div>
 
   </div>
